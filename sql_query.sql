@@ -2,9 +2,9 @@ WITH cte AS (
 SELECT mak.uid
      , UPPER(mak.country) AS country
      , DATE(FROM_UNIXTIME(mak.ts / 1000)) AS "date"
-     , CASE 
-        WHEN mak.frontend_ab_group BETWEEN 1 AND 5 THEN 'ON' 
-        WHEN mak.frontend_ab_group BETWEEN 6 AND 100 THEN 'OFF' 
+     , CASE
+        WHEN mak.frontend_ab_group BETWEEN 1 AND 5 THEN 'ON'
+        WHEN mak.frontend_ab_group BETWEEN 6 AND 100 THEN 'OFF'
         ELSE NULL
         END AS feature_on_off
 FROM mistplayetl.mistplay_android_kinesis mak
@@ -14,7 +14,7 @@ FROM mistplayetl.mistplay_android_kinesis mak
     AND DATE(FROM_UNIXTIME(mak.TS/1000)) BETWEEN DATE '2023-07-31' AND DATE '2023-08-08'
 ), installs AS (
     SELECT uid
-        
+
          , SUM(rev / 100) AS rev
          , COUNT(DISTINCT pid) AS nb_installs
     FROM mistplayetl.installs
@@ -22,7 +22,7 @@ FROM mistplayetl.mistplay_android_kinesis mak
     GROUP BY 1
 ), iap AS (
     SELECT uid
-        
+
          , SUM(amount) AS spend
          , COUNT(pid) AS nb_spends
          , COUNT(DISTINCT uid) AS nb_spender
@@ -51,11 +51,11 @@ SELECT cte.uid
     --  , AVG(COALESCE(iap.spend, 0)) AS ASPU
     --  , iap.nb_spends
     --  , iap.nb_spender
-    , MAX(CASE WHEN cte."date" + INTERVAL '1' day <= now() THEN 1 ELSE 0 END) AS is_d1_ret
-    , MAX(CASE WHEN cte."date" + INTERVAL '7' day <= now() THEN 1 ELSE 0 END) AS is_d7_ret
+    , MAX(CASE WHEN cte."date" + INTERVAL '1' day <= rr.activity_date THEN 1 ELSE 0 END) AS is_d1_ret
+    , MAX(CASE WHEN cte."date" + INTERVAL '7' day <= rr.activity_date THEN 1 ELSE 0 END) AS is_d7_ret
 FROM cte
 LEFT JOIN installs i ON i.uid = cte.uid
-LEFT JOIN iap ON iap.uid = cte.uid 
+LEFT JOIN iap ON iap.uid = cte.uid
 LEFT JOIN retention rr ON rr.uid = cte.uid
 GROUP BY 1,2,3,4,5,6,7
 
@@ -73,7 +73,7 @@ FROM mistplayetl.mistplay_android_kinesis mak
     AND mak.frontend_ab_group BETWEEN 1 AND 5
 ), installs AS (
     SELECT uid
-        
+
          , SUM(rev / 100) AS rev
          , COUNT(DISTINCT pid) AS nb_installs
     FROM mistplayetl.installs
@@ -81,7 +81,7 @@ FROM mistplayetl.mistplay_android_kinesis mak
     GROUP BY 1
 ), iap AS (
     SELECT uid
-        
+
          , SUM(amount) AS spend
          , COUNT(pid) AS nb_spends
          , COUNT(DISTINCT uid) AS nb_spender
@@ -110,10 +110,10 @@ SELECT cte.uid
     --  , AVG(COALESCE(iap.spend, 0)) AS ASPU
     --  , iap.nb_spends
     --  , iap.nb_spender
-    , MAX(CASE WHEN cte."date" + INTERVAL '1' day <= now() THEN 1 ELSE 0 END) AS is_d1_ret
-    , MAX(CASE WHEN cte."date" + INTERVAL '7' day <= now() THEN 1 ELSE 0 END) AS is_d7_ret
+    , MAX(CASE WHEN cte."date" + INTERVAL '1' day <= rr.activity_date THEN 1 ELSE 0 END) AS is_d1_ret
+    , MAX(CASE WHEN cte."date" + INTERVAL '7' day <= rr.activity_date THEN 1 ELSE 0 END) AS is_d7_ret
 FROM cte
 LEFT JOIN installs i ON i.uid = cte.uid
-LEFT JOIN iap ON iap.uid = cte.uid 
+LEFT JOIN iap ON iap.uid = cte.uid
 LEFT JOIN retention rr ON rr.uid = cte.uid
 GROUP BY 1,2,3,4,5,6,7
